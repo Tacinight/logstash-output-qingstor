@@ -8,7 +8,6 @@ require "forwardable"
 module LogStash
   module Outputs
     class Qingstor
-
       class TemporaryFileFactory
         FILE_MODE = "a"
         GZIP_ENCODING = "gzip"
@@ -29,7 +28,7 @@ module LogStash
           rotate!
         end 
 
-        def rorate!
+        def rotate!
           @lock.synchronize {
             @current = new_file
             increment_counter
@@ -38,7 +37,7 @@ module LogStash
         end 
 
         private 
-        def extention 
+        def extension
           gzip? ? GZIP_ENCODING : TXT_EXTENSION
         end 
         
@@ -58,24 +57,24 @@ module LogStash
           filename = "ls.qingstor.#{SecureRandom.uuid}.#{current_time}"
 
           if tags.size > 0
-            "#{filename}.tag_#{tags.join('.')}.part#{counter}.#{extention}"
+            "#{filename}.tag_#{tags.join('.')}.part#{counter}.#{extension}"
           else 
-            "#{filename}.part#{counter}.#{extention}"
+            "#{filename}.part#{counter}.#{extension}"
           end 
         end 
 
         def new_file 
           uuid = SecureRandom.uuid 
           name = generate_name 
-          path = ::File.join(tmpdir, uuid)
-          key = ::File.join(prefix, name)
+          path = ::File.join(@tmpdir, uuid)
+          key = ::File.join(@prefix, name)
 
-          FileUtils.mkdir_p(::File.join(path), prefix)
+          FileUtils.mkdir_p(::File.join(path, @prefix))
 
           io = if gzip? 
                  IOWrappedGzip.new(::File.open(::File.join(path, key), FILE_MODE))
                else 
-                 ::File.open(File.join(path, key), FILE_MODE)
+                 ::File.open(::File.join(path, key), FILE_MODE)
                end 
 
           TemporaryFile.new(key, io, path)

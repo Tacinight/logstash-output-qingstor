@@ -42,9 +42,19 @@ class LogStash::Outputs::Qinstor < LogStash::Outputs::Base
   # Specify the content encoding. Supports ("gzip"), defaults to "none"
   config :encoding, :validate => ["gzip", "none"], default => "none"
 
+  # Define the strategy to use to decide when we need to rotate the file and push it to S3,
+  # The default strategy is to check for both size and time, the first one to match will rotate the file.
+  config :rotation_strategy, :validate => ["size_and_time", "size", "time"], :default => "size_and_time"
+
   public
   def register
+    require "logstash/outputs/qingstor/temporary_file"
+    require "logstash/outputs/qingstor/temporary_file_factory"
+    require "logstash/outputs/qingstor/file_repository"
+
     @file_repository = FileRepository.new(@tags, @encoding, @tmpdir)
+
+    @rotation = rotation_strategy
   end # def register
 
   public
@@ -61,7 +71,17 @@ class LogStash::Outputs::Qinstor < LogStash::Outputs::Base
         @logger.error("QingStor: Nospace left in temporary directory", :tmpdir => @tmpdir)
         raise e 
       end 
-    end  
+    end # end of each method  
   end  # def multi_receive_encoded
   
+  def rotation_strategy 
+    case @rotation_strategy
+    when "size"
+      SizeRotationPolicy.new(size_file)
+    when "time"
+      TimeRotationPolicy.new(time_file)
+    when "size_and_time"
+      SizeAndTimeRatationPolicy.new(size_and_time)
+    end 
+  end 
 end # class LogStash::Outputs::Qinstor
