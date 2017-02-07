@@ -2,7 +2,7 @@
 require "java"
 require "concurrent"
 require "concurrent/timer_task"
-# require "logstash/util"
+require "logstash/util"
 
 ConcurrentHashMap = java.util.concurrent.ConcurrentHashMap
 
@@ -96,8 +96,7 @@ module LogStash
 
         def start_stale_sweeper 
           @stale_sweeper = Concurrent::TimerTask.new(:execution_interval => @sweeper_interval) do 
-            # can't load logstash/util due to unknown error'
-            # LogStash::Util.set_thread_name("Qingstor, stale factory sweeper")
+            LogStash::Util.set_thread_name("Qingstor, stale factory sweeper")
             @prefixed_factories.forEach { |k, v| remove_stale(k, v) }
           end 
 

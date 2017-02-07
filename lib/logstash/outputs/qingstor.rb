@@ -38,7 +38,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   config :bucket, :validate => :string, :required => true
 
   # The region of the QingStor bucket
-  config :region, :validate => :string, :required => true
+  config :region, :validate => ["pek3a", "sh1a"], :default => "pek3a"
 
   # The prefix of filenames
   config :prefix, :validate => :string, :default => nil
@@ -68,15 +68,22 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
 
   public
   def register
-    @file_repository = LogStash::Outputs::Qingstor::FileRepository.new(@tags, @encoding, @tmpdir)
+    @file_repository = FileRepository.new(@tags, @encoding, @tmpdir)
 
     @rotation = rotation_strategy
 
-    executor = Concurrent::ThreadPoolExecutor.new({ :min_threads => 1,
-                                                    :max_threads => 2,
-                                                    :max_queue => 1,
-                                                    :fallback_policy => :caller_runs })
-    @uploader = LogStash::Outputs::Qingstor::Uploader.new(get_bucket, @logger, executor)
+    executor = Concurrent::ThreadPoolExecutor.new({ 
+      :min_threads => 1,
+      :max_threads => 2,
+      :max_queue => 1,
+      :fallback_policy => :caller_runs 
+    })
+
+    @qingstor_validator = QingstorValidator.new(@logger)
+    @qs_bucket =get_bucket
+    @qingstor_validator.bucket_valid?(@qs_bucket)
+
+    @uploader = Uploader.new(@qs_bucket, @logger, executor)
 
     start_periodic_check if @rotation.needs_periodic?
   end # def register
@@ -106,11 +113,11 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   def rotation_strategy 
     case @rotation_strategy
     when "size"
-      LogStash::Outputs::Qingstor::SizeRotationPolicy.new(@size_file)
+      SizeRotationPolicy.new(@size_file)
     when "time"
-      LogStash::Outputs::Qingstor::TimeRotationPolicy.new(@time_file)
+      TimeRotationPolicy.new(@time_file)
     when "size_and_time"
-      LogStash::Outputs::Qingstor::SizeAndTimeRotationPolicy.new(@size_file, @time_file)
+      SizeAndTimeRotationPolicy.new(@size_file, @time_file)
     end 
   end 
 
@@ -141,7 +148,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   def get_bucket
     @qs_config = QingStor::SDK::Config.init @access_key_id, @secret_access_key
     @qs_service = QingStor::SDK::Service.new @qs_config
-    @qs_bucket = @qs_service.bucket @bucket, @region
+    @qs_service.bucket @bucket, @region
   end 
 
   def close 
