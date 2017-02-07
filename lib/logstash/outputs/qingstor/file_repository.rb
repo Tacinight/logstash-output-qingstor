@@ -58,7 +58,7 @@ module LogStash
           @sweeper_interval = sweeper_interval
           @factoryinitializer = FactoryInitializer.new(tags, encoding, temporary_directory, stale_time)
 
-          # start_stale_sweeper
+          start_stale_sweeper
         end
 
         def keys
@@ -95,8 +95,9 @@ module LogStash
         end 
 
         def start_stale_sweeper 
-          @stale_sweeper = Concurrent::TimeTask.new(:execution_interval => @sweeper_interval) do 
-            LogStash::Util.set_thread_name("Qingstor, stale factory sweeper")
+          @stale_sweeper = Concurrent::TimerTask.new(:execution_interval => @sweeper_interval) do 
+            # can't load logstash/util due to unknown error'
+            # LogStash::Util.set_thread_name("Qingstor, stale factory sweeper")
             @prefixed_factories.forEach { |k, v| remove_stale(k, v) }
           end 
 
