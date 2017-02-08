@@ -6,13 +6,8 @@ module LogStash
   module Outputs
     class Qingstor
       class QingstorValidator
-        attr_reader :logger 
 
-        def initialize(logger)
-          @logger = logger
-        end 
-
-        def bucket_valid?(bucket)
+        def self.bucket_valid?(bucket)
           res = bucket.head
           case res[:status_code] 
           when 401
@@ -23,6 +18,12 @@ module LogStash
           true 
         end 
 
+        def self.prefix_valid?(prefix)
+          if prefix.start_with?("/") || prefix.length >= 1024
+            raise LogStash::ConfigurationError, "Prefix must not start with '/' with length less than 1024 "
+          end 
+          true
+        end 
       end 
     end 
   end 

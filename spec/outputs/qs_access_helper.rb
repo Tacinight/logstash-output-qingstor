@@ -34,14 +34,3 @@ def bucket_valid?(bucket)
   end 
   true
 end 
-
-require "qingstor/sdk"
-access_key_id = ENV['access_key_id']
-secret_access_key = ENV['secret_access_key']
-config = QingStor::SDK::Config.init(access_key_id, secret_access_key)
-service = QingStor::SDK::Service.new config
-bucket = "grgrege" # ENV['bucket']
-region = ENV['region']
-properties = {'bucket-name' => bucket, 'zone' => region }
-bucket = QingStor::SDK::Bucket.new(config, properties)
-p bucket_valid?(bucket)

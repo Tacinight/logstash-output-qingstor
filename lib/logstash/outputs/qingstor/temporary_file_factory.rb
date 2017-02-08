@@ -38,7 +38,7 @@ module LogStash
 
         private 
         def extension
-          gzip? ? GZIP_ENCODING : TXT_EXTENSION
+          gzip? ? GZIP_EXTENSION : TXT_EXTENSION
         end 
         
         def gzip?

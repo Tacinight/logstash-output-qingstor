@@ -4,6 +4,7 @@ require "logstash/outputs/base"
 require "logstash/namespace"
 require "tmpdir"
 require "qingstor/sdk"
+require "concurrent"
 
 class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   require "logstash/outputs/qingstor/temporary_file"
@@ -13,6 +14,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   require "logstash/outputs/qingstor/time_rotation_policy"
   require "logstash/outputs/qingstor/size_and_time_rotation_policy"
   require "logstash/outputs/qingstor/uploader"
+  require "logstash/outputs/qingstor/qingstor_validator"
 
   PERIODIC_CHECK_INTERVAL_IN_SECONDS = 15
   config_name "qingstor"
@@ -45,7 +47,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
 
   # Set the directory where logstash store the tmp files before 
   # sending it to qingstor, default directory in linux /tmp/logstash
-  config :tmpdir, :validate => :string, :default => File.join(Dir.tmpdir, "logstash")
+  config :tmpdir, :validate => :string, :default => File.join(Dir.tmpdir, "logstash2qingstor")
 
   # Define tags to append to the file on the qingstor bucket
   config :tags, :validate => :array, :default => []
@@ -57,10 +59,13 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   # The default strategy is to check for both size and time, the first one to match will rotate the file.
   config :rotation_strategy, :validate => ["size_and_time", "size", "time"], :default => "size_and_time"
 
+  # Define the size requirement for each file to upload to qingstor. In byte.
   config :size_file, :validate => :number, :default => 1024 * 1024 * 5
+
+  # Define the time interval for each file to upload to qingstor. In minutes.
   config :time_file, :validate => :number, :default => 15 
 
-  # Specify how many workers to use to upload the files to S3
+  # Specify maximum number of workers to use to upload the files to Qingstor
   config :upload_workers_count, :validate => :number, :default => (Concurrent.processor_count * 0.5).ceil
 
   # Number of items we can keep in the local queue before uploading them
@@ -68,20 +73,25 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
 
   public
   def register
+    QingstorValidator.prefix_valid?(@prefix)
+
+    if !directory_valid?(@tmpdir)
+      raise LogStash::ConfigurationError, "Logstash must have the permissions to write to the temporary directory: #{@tmpdir}"
+    end
+    
     @file_repository = FileRepository.new(@tags, @encoding, @tmpdir)
 
     @rotation = rotation_strategy
 
     executor = Concurrent::ThreadPoolExecutor.new({ 
       :min_threads => 1,
-      :max_threads => 2,
-      :max_queue => 1,
+      :max_threads => @upload_workers_count,
+      :max_queue => @upload_queue_size,
       :fallback_policy => :caller_runs 
     })
 
-    @qingstor_validator = QingstorValidator.new(@logger)
     @qs_bucket =get_bucket
-    @qingstor_validator.bucket_valid?(@qs_bucket)
+    QingstorValidator.bucket_valid?(@qs_bucket)
 
     @uploader = Uploader.new(@qs_bucket, @logger, executor)
 
@@ -93,7 +103,6 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
     prefix_written_to = Set.new
 
     events_and_encoded.each do |event, encoded|
-      #prefix_key = normalized_key(event.sprintf(@prefix))
       prefix_key = event.sprintf(@prefix)
       prefix_written_to << prefix_key
 
@@ -192,4 +201,12 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
     @periodic_check.shutdown 
   end 
 
+  def directory_valid?(path)
+    begin 
+      FileUtils.mkdir_p(path) unless Dir.exist?(path)
+      ::File.writable?(path)
+    rescue 
+      false 
+    end 
+  end 
 end # class LogStash::Outputs::Qingstor

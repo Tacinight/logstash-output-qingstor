@@ -17,7 +17,7 @@ describe LogStash::Outputs::Qingstor::Uploader do
   let(:threadpool) do 
     Concurrent::ThreadPoolExecutor.new({
                                          :min_threads => 1,
-                                         :max_threads => 8,
+                                         :max_threads => 4,
                                          :max_queue => 1,
                                          :fallback_policy => :caller_runs
                                        })

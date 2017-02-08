@@ -2,6 +2,7 @@
 require "logstash/devutils/rspec/spec_helper"
 require "logstash/outputs/qingstor"
 require "logstash/event"
+require_relative "./qs_access_helper"
 
 describe LogStash::Outputs::Qingstor do
 
@@ -29,8 +30,9 @@ describe LogStash::Outputs::Qingstor do
     end 
 
     it "uses 'Event#sprintf' for the prefix" do 
-      expect(event).to receive(:sprintf).with(prefix).and_return("super/overwatch1")
+      expect(event).to receive(:sprintf).with(prefix).and_return("super/overwatch")
       subject.multi_receive_encoded(events_and_encoded)
-    end    
+    end
   end 
+
 end
