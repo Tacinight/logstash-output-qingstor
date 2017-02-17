@@ -1,3 +1,10 @@
+def fetch_event(settings, events_and_encoded) 
+  qs = LogStash::Outputs::Qingstor.new(settings)
+  qs.register
+  qs.multi_receive_encoded(events_and_encoded)
+  qs.close
+end 
+
 def qs_init_config(access_key_id = ENV['access_key_id'],
                    secret_access_key = ENV['secret_access_key'])
   QingStor::SDK::Config.init access_key_id, secret_access_key
@@ -24,13 +31,8 @@ def delete_bucket(bucket)
   bucket.delete
 end 
 
-def bucket_valid?(bucket)
-  res = bucket.head
-  case res[:status_code] 
-  when 401
-    raise "Incorrect key id or access key."
-  when 404
-    raise "Incorrect bucket/region name."
+def clean_remote_files
+  list_remote_file.each do |record|
+    qs_init_bucket.delete_object record[:key]
   end 
-  true
 end 

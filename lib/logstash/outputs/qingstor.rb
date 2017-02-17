@@ -43,7 +43,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   config :region, :validate => ["pek3a", "sh1a"], :default => "pek3a"
 
   # The prefix of filenames
-  config :prefix, :validate => :string, :default => nil
+  config :prefix, :validate => :string, :default => ''
 
   # Set the directory where logstash store the tmp files before 
   # sending it to qingstor, default directory in linux /tmp/logstash
@@ -71,9 +71,18 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   # Number of items we can keep in the local queue before uploading them
   config :upload_queue_size, :validate => :number, :default => 2 * (Concurrent.processor_count * 0.25).ceil
 
+  # Specifies what type of encryption to use when SSE is enabled.
+  config :server_side_encryption_algorithm, :validate => ["AES256", "none"], :default => "none"
+
+  # Specifies the encryption customer key that would be used in server side   
+  config :customer_key, :validate => :string
+
+  # Specifies if set to true, it would upload existing file in targeting folder at the beginning.
+  config :restore, :validate => :boolean, :default => false  
+
   public
   def register
-    QingstorValidator.prefix_valid?(@prefix)
+    QingstorValidator.prefix_valid?(@prefix) unless @prefix.nil?
 
     if !directory_valid?(@tmpdir)
       raise LogStash::ConfigurationError, "Logstash must have the permissions to write to the temporary directory: #{@tmpdir}"
@@ -90,12 +99,14 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
       :fallback_policy => :caller_runs 
     })
 
-    @qs_bucket =get_bucket
+    @qs_bucket = get_bucket
     QingstorValidator.bucket_valid?(@qs_bucket)
 
     @uploader = Uploader.new(@qs_bucket, @logger, executor)
 
     start_periodic_check if @rotation.needs_periodic?
+
+    restore_from_crash if @restore 
   end # def register
 
   public
@@ -149,6 +160,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   def upload_file(file)
     @logger.debug("Add file to uploading queue", :key => file.key)
     file.close 
+    @logger.debug("upload options", :upload_options => upload_options)
     @uploader.upload_async(file,
                           :on_complete => method(:clean_temporary_file),
                           :upload_options => upload_options)
@@ -171,13 +183,23 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
     @file_repository.shutdown
 
     @uploader.stop 
-    # crash_uploader.stop if @restore
+
+    crash_uploader.stop if @restore
   end 
 
   def upload_options
-    {
+    options = {
       :content_encoding => @encoding == "gzip" ? "gzip" : nil 
     }
+
+    if  @server_side_encryption_algorithm == "AES256" && !@customer_key.nil?
+      options.merge!({
+        :server_side_encryption_algorithm => @server_side_encryption_algorithm,
+        :customer_key => @customer_key
+      })
+    end 
+    
+    options 
   end 
 
   def clean_temporary_file(file)
@@ -207,6 +229,19 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
       ::File.writable?(path)
     rescue 
       false 
+    end 
+  end 
+
+  def restore_from_crash 
+    @crash_uploader = Uploader.new(@qs_bucket, @logger, CRASH_RECOVERY_THREADPOOL)
+
+    temp_folder_path = Pathname.new(@tmpdir)
+    Dir.glob(::File.join(@tmpdir, "**/*"))
+      .select { |file| ::File.file?(file) }
+      .each do |file| 
+      temp_file = TemporaryFile.create_from_existing_file(file, temp_folder_path)
+      @logger.debug("Recoving from crash and uploading", :file => temp_file.path)
+      @crash_uploader.upload_async(temp_file, :on_complete => method(:clean_temporary_file))
     end 
   end 
 end # class LogStash::Outputs::Qingstor
