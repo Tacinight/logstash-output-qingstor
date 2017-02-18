@@ -3,6 +3,7 @@ require "logstash/devutils/rspec/spec_helper"
 require "logstash/outputs/qingstor"
 require "logstash/event"
 require "openssl"
+require "fileutils"
 require_relative "./qs_access_helper"
 require_relative "./spec_helper"
 
@@ -18,6 +19,7 @@ describe LogStash::Outputs::Qingstor do
       "region" => ENV['region'],
       "prefix" => prefix
   }}
+  let(:tmpdir){File.join(Dir.tmpdir, "logstash_restore_dir")}
 
   after do 
     clean_remote_files
@@ -36,6 +38,13 @@ describe LogStash::Outputs::Qingstor do
     expect(list_remote_file.size).to eq(1)
   end 
 
-  
+  it "upload existing file if turn on restore function" do 
+    FileUtils.mkdir_p(File.join(tmpdir, "uuid_dir")) unless File.exists?(File.join(tmpdir, "uuid_dir"))
+    f = File.open(File.join(tmpdir, "uuid_dir/temp"), 'w')
+    f.write(event_encoded * 10)
+    f.close
+    fetch_event(options.merge({"restore" => true, "tmpdir" => tmpdir}), events_and_encoded)
+    expect(list_remote_file.size).to eq(2)
+  end 
 
 end 

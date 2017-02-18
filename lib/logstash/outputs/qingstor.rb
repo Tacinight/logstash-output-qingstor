@@ -17,6 +17,11 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   require "logstash/outputs/qingstor/qingstor_validator"
 
   PERIODIC_CHECK_INTERVAL_IN_SECONDS = 15
+  CRASH_RECOVERY_THREADPOOL = Concurrent::ThreadPoolExecutor.new({
+                                                                  :min_threads => 1,
+                                                                  :max_threads => 2,
+                                                                  :fallback_policy => :caller_runs
+                                                                })
   config_name "qingstor"
 
   # When configured as :single a single instance of the Output will be shared among the
@@ -184,7 +189,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
 
     @uploader.stop 
 
-    crash_uploader.stop if @restore
+    @crash_uploader.stop if @restore
   end 
 
   def upload_options
@@ -241,7 +246,8 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
       .each do |file| 
       temp_file = TemporaryFile.create_from_existing_file(file, temp_folder_path)
       @logger.debug("Recoving from crash and uploading", :file => temp_file.path)
-      @crash_uploader.upload_async(temp_file, :on_complete => method(:clean_temporary_file))
+      @crash_uploader.upload_async(temp_file, :on_complete => method(:clean_temporary_file),
+                                              :upload_options => upload_options)
     end 
   end 
 end # class LogStash::Outputs::Qingstor

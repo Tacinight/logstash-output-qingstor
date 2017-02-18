@@ -47,7 +47,7 @@ module LogStash
               "x_qs_encryption_customer_key_md5" => base64_key_md5,
             })
           end 
-
+          @logger.debug("uploading file", :file => file.key)
           bucket.put_object(file.key, upload_headers)
 
           options[:on_complete].call(file) unless options[:on_complete].nil?

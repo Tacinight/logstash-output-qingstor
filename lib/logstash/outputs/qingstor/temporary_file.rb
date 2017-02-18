@@ -2,6 +2,7 @@
 require "thread"
 require "forwardable"
 require "fileutils"
+require "pathname"
 
 module LogStash
   module Outputs
@@ -50,7 +51,7 @@ module LogStash
         end 
 
         def self.create_from_existing_file(file_path, tmp_folder)
-          key_parts = Pathname.new(file_path).relative_path_from(tmp_path).to_s.split(::File.SEPARATOR)
+          key_parts = Pathname.new(file_path).relative_path_from(tmp_folder).to_s.split(::File::SEPARATOR)
           TemporaryFile.new(key_parts.slice(1, key_parts.size).join("/"),
                             ::File.open(file_path, "r"),
                             ::File.join(tmp_folder, key_parts.slice(0, 1)))
