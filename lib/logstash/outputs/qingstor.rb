@@ -47,11 +47,11 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   # The region of the QingStor bucket
   config :region, :validate => ["pek3a", "sh1a"], :default => "pek3a"
 
-  # The prefix of filenames
+  # The prefix of filenames which will work as directory in qingstor 
   config :prefix, :validate => :string, :default => ''
 
   # Set the directory where logstash store the tmp files before 
-  # sending it to qingstor, default directory in linux /tmp/logstash
+  # sending it to qingstor, default directory in linux /tmp/logstash2qingstor
   config :tmpdir, :validate => :string, :default => File.join(Dir.tmpdir, "logstash2qingstor")
 
   # Define tags to append to the file on the qingstor bucket
