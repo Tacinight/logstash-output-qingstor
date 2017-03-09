@@ -5,7 +5,11 @@ Qingstor是[Qingcloud](https://www.qingcloud.com/)推出的对象存储服务.
 作为一个output插件, 可以将logstash输出的结果打包上传至Qingstor中.  
 详细功能参考下面配置说明.  
 
-目前代码尚未提交至官方插件库, 需要手动安装, 安装方法参考下文.
+目前插件已经提交至rubygems.org, 使用以下命令安装:
+```sh
+    bin/logstash-plugin install logstash-output-qingstor
+```
+ 手动安装本地代码, 安装方法参考下文.
 
 ## 1. 配置说明
 
@@ -113,7 +117,11 @@ bin/logstash-plugin install /your/local/plugin/logstash-output-qingstor.gem
 
 As an output plugin, it can collect the outputs from logstash, and store them in [Qingstor](https://www.qingcloud.com/products/storage#qingstor), which is a remarkable object storage service provided by [Qingcloud](https://www.qingcloud.com/).
 
-For now, We haven't submitted this plugin to official plugin repository. If you want to have a try, please refer to the following guide to install it manually.
+For now, We've submitted this plugin to rubygems.org. Use the following command to install.
+```sh
+    bin/logstash-plugin install logstash-output-qingstor
+```
+If want to install the local code, please refer to the following guide to install it manually.
 
 ## 1. Configuration Guide
 
