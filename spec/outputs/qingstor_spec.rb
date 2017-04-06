@@ -47,4 +47,14 @@ describe LogStash::Outputs::Qingstor do
     expect(list_remote_file.size).to eq(2)
   end 
 
+  it "redirect to the specified host without specified port" do 
+      new_options = options.merge({"host" => "qingstor.dev", "port" => 444})
+      expect{fetch_event(new_options, events_and_encoded)}.to raise_error(Net::HTTP::Persistent::Error)
+    end 
+
+  it "redirect to the specified host without specified port" do 
+    new_options = options.merge({"host" => "qingstor.dev", "port" => 444})
+    expect{fetch_event(new_options, events_and_encoded)}.to raise_error(Net::HTTP::Persistent::Error)
+  end 
+  
 end 

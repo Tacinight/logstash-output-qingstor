@@ -41,6 +41,12 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   # The key to access your QingStor
   config :secret_access_key, :validate => :string, :required => true
 
+  # If specified, it would redirect to this host address.
+  config :host, :validate => :string, :default => nil
+
+  # It specifies the host port, please coordinate with config 'host'.
+  config :port, :validate => :number, :default => 443
+
   # The name of the qingstor bucket
   config :bucket, :validate => :string, :required => true
 
@@ -65,10 +71,10 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   config :rotation_strategy, :validate => ["size_and_time", "size", "time"], :default => "size_and_time"
 
   # Define the size requirement for each file to upload to qingstor. In byte.
-  config :size_file, :validate => :number, :default => 1024 * 1024 * 5
+  config :file_size, :validate => :number, :default => 1024 * 1024 * 5
 
   # Define the time interval for each file to upload to qingstor. In minutes.
-  config :time_file, :validate => :number, :default => 15 
+  config :file_time, :validate => :number, :default => 15 
 
   # Specify maximum number of workers to use to upload the files to Qingstor
   config :upload_workers_count, :validate => :number, :default => (Concurrent.processor_count * 0.5).ceil
@@ -138,11 +144,11 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   def rotation_strategy 
     case @rotation_strategy
     when "size"
-      SizeRotationPolicy.new(@size_file)
+      SizeRotationPolicy.new(@file_size)
     when "time"
-      TimeRotationPolicy.new(@time_file)
+      TimeRotationPolicy.new(@file_time)
     when "size_and_time"
-      SizeAndTimeRotationPolicy.new(@size_file, @time_file)
+      SizeAndTimeRotationPolicy.new(@file_size, @file_time)
     end 
   end 
 
@@ -173,6 +179,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
 
   def get_bucket
     @qs_config = QingStor::SDK::Config.init @access_key_id, @secret_access_key
+    @qs_config.update({ host: @host, port: @port }) unless @host.nil?
     @qs_service = QingStor::SDK::Service.new @qs_config
     @qs_service.bucket @bucket, @region
   end 
