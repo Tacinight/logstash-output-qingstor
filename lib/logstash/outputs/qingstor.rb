@@ -10,9 +10,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   require "logstash/outputs/qingstor/temporary_file"
   require "logstash/outputs/qingstor/temporary_file_factory"
   require "logstash/outputs/qingstor/file_repository"
-  require "logstash/outputs/qingstor/size_rotation_policy"
-  require "logstash/outputs/qingstor/time_rotation_policy"
-  require "logstash/outputs/qingstor/size_and_time_rotation_policy"
+  require "logstash/outputs/qingstor/rotation_policy"
   require "logstash/outputs/qingstor/uploader"
   require "logstash/outputs/qingstor/qingstor_validator"
 
@@ -101,7 +99,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
     
     @file_repository = FileRepository.new(@tags, @encoding, @tmpdir)
 
-    @rotation = rotation_strategy
+    @rotation = RotationPolicy.new(@rotation_strategy, @file_size, @file_time)
 
     executor = Concurrent::ThreadPoolExecutor.new({ 
       :min_threads => 1,
@@ -141,16 +139,6 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
     rotate_if_needed(prefix_written_to)
   end  # def multi_receive_encoded
   
-  def rotation_strategy 
-    case @rotation_strategy
-    when "size"
-      SizeRotationPolicy.new(@file_size)
-    when "time"
-      TimeRotationPolicy.new(@file_time)
-    when "size_and_time"
-      SizeAndTimeRotationPolicy.new(@file_size, @file_time)
-    end 
-  end 
 
   def rotate_if_needed(prefixs)
     prefixs.each do |prefix|

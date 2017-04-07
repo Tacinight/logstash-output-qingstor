@@ -38,7 +38,7 @@ describe LogStash::Outputs::Qingstor::Uploader do
 
   it "upload file to the qingstor bucket" do 
     subject.upload(file)
-    expect(list_remote_file.size).to eq(3)
+    expect(list_remote_file.size).to eq(1)
   end 
 
   it "execute a callback when the upload is complete" do 
