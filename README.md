@@ -24,7 +24,7 @@ output {
 
 ```
 
-More configuration details please refer to [code part](lib/logstash/outputs/qingstor.rb).
+More configuration details please refer to [common options](/docs/index.asciidoc).
 
 ## 2. Running your unpublished Plugin in Logstash
 

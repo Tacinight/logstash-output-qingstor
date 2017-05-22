@@ -55,26 +55,26 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   config :prefix, :validate => :string, :default => ''
 
   # Set the directory where logstash store the tmp files before 
-  # sending it to qingstor, default directory in linux /tmp/logstash2qingstor
+  # sending it to QingStor, default directory in linux /tmp/logstash2qingstor
   config :tmpdir, :validate => :string, :default => File.join(Dir.tmpdir, "logstash2qingstor")
 
-  # Define tags to append to the file on the qingstor bucket
+  # Define tags to append to the file on the QingStor bucket
   config :tags, :validate => :array, :default => []
 
   # Specify the content encoding. Supports ("gzip"), defaults to "none"
   config :encoding, :validate => ["gzip", "none"], :default => "none"
 
-  # Define the strategy to use to decide when we need to rotate the file and push it to S3,
+  # Define the strategy to use to decide when we need to rotate the file and push it to QingStor,
   # The default strategy is to check for both size and time, the first one to match will rotate the file.
   config :rotation_strategy, :validate => ["size_and_time", "size", "time"], :default => "size_and_time"
 
-  # Define the size requirement for each file to upload to qingstor. In byte.
+  # Define the size requirement for each file to upload to QingStor. In byte.
   config :file_size, :validate => :number, :default => 1024 * 1024 * 5
 
-  # Define the time interval for each file to upload to qingstor. In minutes.
+  # Define the time interval for each file to upload to QingStor. In minutes.
   config :file_time, :validate => :number, :default => 15 
 
-  # Specify maximum number of workers to use to upload the files to Qingstor
+  # Specify maximum number of workers to use to upload the files to QingStor
   config :upload_workers_count, :validate => :number, :default => (Concurrent.processor_count * 0.5).ceil
 
   # Number of items we can keep in the local queue before uploading them
