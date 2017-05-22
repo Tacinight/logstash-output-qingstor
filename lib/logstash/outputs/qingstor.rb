@@ -127,7 +127,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
       prefix_written_to << prefix_key
 
       begin
-        @file_repository.get_file(prefix_key) { |file| file.write(encoded) }
+        @file_repository.get_file(prefix_key) { |file| file.write(encoded + "\n") }
       rescue Errno::ENOSPC => e
         @logger.error("QingStor: Nospace left in temporary directory", :tmpdir => @tmpdir)
         raise e 
