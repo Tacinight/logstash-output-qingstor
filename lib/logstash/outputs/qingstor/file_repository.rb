@@ -1,12 +1,14 @@
 # encoding: utf-8
-require "java"
-require "concurrent"
-require "concurrent/timer_task"
-require "logstash/util"
+
+require 'logstash/util'
+require 'logstash/outputs/qingstor'
+require 'java'
+require 'concurrent'
+require 'concurrent/timer_task'
 
 ConcurrentHashMap = java.util.concurrent.ConcurrentHashMap
 
-module LogStash 
+module LogStash
   module Outputs
     class Qingstor
       class FileRepository
@@ -20,22 +22,25 @@ module LogStash
           end
 
           def with_lock
-            @lock.synchronize {
+            @lock.synchronize do
               yield @file_factory
-            }          
-          end 
+            end
+          end
 
           def stale?
-            with_lock { |factory| factory.current.size == 0 && (Time.now - factory.current.ctime > @stale_time) }
-          end 
+            with_lock do |factory|
+              factory.current.empty? &&
+                (Time.now - factory.current.ctime > @stale_time)
+            end
+          end
 
-          def apply(prefix)
-            return self
-          end 
+          def apply(_prefix)
+            self
+          end
 
-          def delete! 
+          def delete!
             with_lock { |factory| factory.current.delete! }
-          end 
+          end
         end
 
         class FactoryInitializer
@@ -44,69 +49,79 @@ module LogStash
             @encoding = encoding
             @temporary_directory = temporary_directory
             @stale_time = stale_time
-          end 
+          end
 
           def apply(prefix_key)
-            PrefixedValue.new(TemporaryFileFactory.new(prefix_key, @tags, @encoding, @temporary_directory), @stale_time) 
-          end 
-        end 
+            PrefixedValue.new(
+              TemporaryFileFactory.new(prefix_key, @tags, @encoding,
+                                       @temporary_directory),
+              @stale_time
+            )
+          end
+        end
 
         def initialize(tags, encoding, temporary_directory,
                        stale_time = DEFAULT_STATE_TIME_SECS,
                        sweeper_interval = DEFAULT_STATE_SWEEPER_INTERVAL_SECS)
-          @prefixed_factories = ConcurrentHashMap.new 
+          @prefixed_factories = ConcurrentHashMap.new
           @sweeper_interval = sweeper_interval
-          @factoryinitializer = FactoryInitializer.new(tags, encoding, temporary_directory, stale_time)
+          @factoryinitializer = FactoryInitializer.new(tags,
+                                                       encoding,
+                                                       temporary_directory,
+                                                       stale_time)
 
           start_stale_sweeper
         end
 
         def keys
           @prefixed_factories.keySet
-        end 
+        end
 
-        def each_files 
+        def each_files
           @prefixed_factories.elements.each do |prefixed_file|
             prefixed_file.with_lock { |factory| yield factory.current }
-          end 
-        end 
+          end
+        end
 
         def get_factory(prefix_key)
-          @prefixed_factories.computeIfAbsent(prefix_key, @factoryinitializer).with_lock { |factory| yield factory }
-        end 
+          @prefixed_factories.computeIfAbsent(prefix_key, @factoryinitializer)
+                             .with_lock { |factory| yield factory }
+        end
 
         def get_file(prefix_key)
           get_factory(prefix_key) { |factory| yield factory.current }
-        end 
+        end
 
-        def shutdown 
-          stop_stale_sweeper 
-        end 
+        def shutdown
+          stop_stale_sweeper
+        end
 
-        def size 
-          @prefixed_factories.size 
-        end 
-        
+        def size
+          @prefixed_factories.size
+        end
+
         def remove_stale(k, v)
-          if v.stale? 
+          if v.stale?
             @prefixed_factories.remove(k, v)
             v.delete!
-          end 
-        end 
+          end
+        end
 
-        def start_stale_sweeper 
-          @stale_sweeper = Concurrent::TimerTask.new(:execution_interval => @sweeper_interval) do 
-            LogStash::Util.set_thread_name("Qingstor, stale factory sweeper")
+        def start_stale_sweeper
+          @stale_sweeper = Concurrent::TimerTask.new(
+            :execution_interval => @sweeper_interval
+          ) do
+            LogStash::Util.set_thread_name('Qingstor, stale factory sweeper')
             @prefixed_factories.forEach { |k, v| remove_stale(k, v) }
-          end 
+          end
 
           @stale_sweeper.execute
-        end 
+        end
 
-        def stop_stale_sweeper 
+        def stop_stale_sweeper
           @stale_sweeper.shutdown
-        end 
-      end 
-    end 
-  end 
-end 
+        end
+      end
+    end
+  end
+end

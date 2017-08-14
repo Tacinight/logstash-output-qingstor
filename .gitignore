@@ -1,3 +1,4 @@
 *.gem
 *.lock
 test.rb
+.ruby-version

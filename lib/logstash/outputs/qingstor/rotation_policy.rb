@@ -1,71 +1,78 @@
 # encoding: utf-8
-module LogStash 
-  module Outputs 
+
+require 'logstash/outputs/qingstor'
+
+module LogStash
+  module Outputs
     class Qingstor
       class RotationPolicy
-        
         def initialize(policy, file_size, file_time)
           @policy = policy
           case policy
-          when "time"
+          when 'time'
             init_time(file_time)
-          when "size"
+          when 'size'
             init_size(file_size)
-          when "size_and_time"
+          when 'size_and_time'
             init_size(file_size)
-            init_time(file_time)     
-          end 
-        end 
+            init_time(file_time)
+          end
+        end
 
         def init_size(file_size)
           if file_size <= 0
-            raise LogStash::ConfigurationError, "'file_size' need to be greater than 0" 
+            raise LogStash::ConfigurationError, "'file_size' need to "\
+              + 'be greater than 0'
           end
           @file_size = file_size
-        end 
+        end
 
         def init_time(file_time)
           if file_time <= 0
-            raise LogStash::ConfigurationError, "'file_time' need to be greater than 0" 
-          end 
+            raise LogStash::ConfigurationError, "'file_time' need to "\
+              + 'be greater than 0'
+          end
           @file_time = file_time
-        end 
+        end
 
         def rotate?(file)
           case @policy
-          when "time"
+          when 'time'
             time_rotate?(file)
-          when "size"
+          when 'size'
             size_rotate?(file)
-          when "size_and_time"
+          when 'size_and_time'
             size_and_time_rotate?(file)
           end
-        end 
+        end
 
         def size_and_time_rotate?(file)
           size_rotate?(file) || time_rotate?(file)
-        end 
+        end
 
         def size_rotate?(file)
           file.size >= @file_size
-        end 
+        end
 
         def time_rotate?(file)
-          file.size > 0 && (Time.now - file.ctime) >= @file_time
-        end 
+          !file.empty? && (Time.now - file.ctime) >= @file_time
+        end
 
         def needs_periodic?
           case @policy
-          when "time" then
+          when 'time' then
             true
-          when "size_and_time" then
+          when 'size_and_time' then
             true
           else
             false
           end
         end
 
-      end 
-    end 
-  end 
-end 
+        def to_s
+          "#{@policy} #{@file_time} #{@file_size}"
+        end
+      end
+    end
+  end
+end

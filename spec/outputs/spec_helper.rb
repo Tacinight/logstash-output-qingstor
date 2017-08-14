@@ -1,4 +1,4 @@
-require "logstash/devutils/rspec/spec_helper"
-require "logstash/logging/logger"
+require 'logstash/devutils/rspec/spec_helper'
+require 'logstash/logging/logger'
 
-LogStash::Logging::Logger::configure_logging("warn")
+LogStash::Logging::Logger.configure_logging('warn')
