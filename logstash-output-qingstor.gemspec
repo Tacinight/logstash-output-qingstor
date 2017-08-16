@@ -1,10 +1,10 @@
 Gem::Specification.new do |s|
   s.name          = 'logstash-output-qingstor'
-  s.version       = '0.1.3'
+  s.version       = '0.2.0'
   s.licenses      = ['Apache License (2.0)']
   s.summary       = 'logstash output plugin for qingstor'
   s.description   = 'Collect the outputs of logstash and store into Qingstor'
-  s.homepage      = 'https://github.com/tacinight/logstash-output-qingstor'
+  s.homepage      = 'https://github.com/yunify/logstash-output-qingstor'
   s.authors       = ['Evan Zhao']
   s.email         = 'tacingiht@gmail.com'
   s.require_paths = ['lib']
