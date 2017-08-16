@@ -35,7 +35,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   #
   # Only the `#multi_receive/#multi_receive_encoded` methods need to actually
   # be threadsafe, the other methods will only be executed in a single thread
-  concurrency :shared
+  concurrency :single
 
   # The key id to access your QingStor
   config :access_key_id, :validate => :string, :required => true
@@ -140,7 +140,10 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
       prefix_written_to << prefix_key
 
       begin
-        @file_repository.get_file(prefix_key) { |f| f.write(encoded + "\n") }
+        @file_repository.get_file(prefix_key) do |f|
+          content = encoded.strip + "\n"
+          f.write(content)
+        end
       rescue Errno::ENOSPC => e
         @logger.error('QingStor: Nospace left in temporary directory',
                       :tmpdir => @tmpdir)
