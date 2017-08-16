@@ -1,21 +1,24 @@
 # Logstash Output Plugin for QingStor
 
-这是一个适配了[QingStor](https://www.qingcloud.com/products/storage#qingstor), 工作在logstash中的output插件.   
-QingStor是[QingCloud](https://www.qingcloud.com/)推出的对象存储服务.  
-作为一个output插件, 可以将logstash输出的结果打包上传至QingStor中.  
+[English](/README.md) | 中文
+
+作为一个 Logstash 的 Output 插件, 它可以将 Logstash 输出的结果打包上传至 QingStor 对象存储中.  
 详细功能参考下面配置说明.  
 
-目前插件已经提交至rubygems.org, 使用以下命令安装:
-```sh
-    bin/logstash-plugin install logstash-output-qingstor
+目前插件已经提交至 [RubyGems](https://rubygems.org), 使用以下命令安装:
+
+``` bash
+$ bin/logstash-plugin install logstash-output-qingstor
 ```
+
  手动安装本地代码, 安装方法参考下文.
 
 ## 1. 配置说明
 
 #### 1.1 最小运行配置
-- 使用'-f'接受一个*.conf文件或者使用'-e'参数时, 最小运行配置至少需要以下三项
-```sh
+- 使用 `-f` 接受一个 `*.conf` 文件或者使用 `-e` 参数直接输入配置, 最小运行配置至少需要以下三项
+- 
+``` bash
 output {
     qingstor {
         access_key_id => 'your_access_key_id'           #required 
@@ -24,11 +27,11 @@ output {
         # region => "pek3a"                             #optional, default value "pek3a"                                
     }
 }
-
 ```
 
 #### 1.2 其他可选参数说明
-```sh
+
+``` bash
 output {
     qingstor {
         ......
@@ -76,38 +79,51 @@ output {
                                        
     }
 }
-
 ```
 
 ## 2. 安装插件
 
 #### 2.1 直接运行本地的插件
 
-- 编辑Logstash目录下的Genfile, 添加插件的路径, 例如
-```ruby
-gem "logstash-output-qingstor", :path => "/your/local/logstash-output-qingstor"
+- 编辑 Logstash 目录下的 Gemfile, 添加插件的路径, 例如
+
+``` ruby
+$ gem "logstash-output-qingstor", :path => "/your/local/logstash-output-qingstor"
 ```
+
 - 安装插件
-```sh
-bin/logstash-plugin install --no-verify
+
+``` bash
+$ bin/logstash-plugin install --no-verify
 ```
+
 - 使用插件运行
-```sh
-bin/logstash -e "output {qingstor {access_key_id => 'your_access_key_id'            
-        secret_access_key => 'your_secret_access_key'     
-        bucket => 'bucket_name'                          }}"
+- 
+``` bash
+$ bin/logstash -e "output { \
+      qingstor { \
+          access_key_id => 'your_access_key_id' \
+          secret_access_key => 'your_secret_access_key' \
+          bucket => 'bucket_name' \
+      } \
+  }"
 ```
+
 此时你对插件所做的任意的代码上的修改都会直接生效.
 
 #### 2.2 安装一个本地插件然后运行
 
-这一步你需要生成一个插件的gem包, 然后通过logstash来安装到logstash的插件目录下
-- 在项目目录下生成gem
-```sh
-gem build logstash-output-qingstor.gemspec
+这一步你需要生成一个插件的 Gem 包, 然后通过 Logstash 来安装到 Logstash 的插件目录下
+- 在项目目录下生成 Gem
+
+``` bash
+$ gem build logstash-output-qingstor.gemspec
 ```
-- 在Logstash的目录下使用logstash-plugin安装
-```sh
-bin/logstash-plugin install /your/local/plugin/logstash-output-qingstor.gem
+
+- 在 Logstash 的目录下使用 `logstash-plugin` 安装
+
+``` bash
+$ bin/logstash-plugin install /your/local/plugin/logstash-output-qingstor.gem
 ```
-- 安装完毕之后, 就可以使用Logstash运行开始测试了.
+
+- 安装完毕之后, 就可以使用 Logstash 运行开始测试了.
