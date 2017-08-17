@@ -39,7 +39,7 @@ module LogStash
 
           upload_headers = {
             'content_md5' => file_md5,
-            'body' => ::File.open(file.path)
+            'body' => ::File.read(file.path)
           }
 
           unless upload_options[:server_side_encryption_algorithm].nil?

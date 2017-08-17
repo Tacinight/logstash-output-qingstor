@@ -32,7 +32,7 @@ module LogStash
             raise LogStash::ConfigurationError, "'file_time' need to "\
               + 'be greater than 0'
           end
-          @file_time = file_time
+          @file_time = file_time * 60
         end
 
         def rotate?(file)
