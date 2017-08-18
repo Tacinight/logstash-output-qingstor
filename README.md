@@ -4,10 +4,18 @@ English | [中文](/README_zh_CN.md)
 
 As an output plugin, it can collect the outputs from logstash, and store them in [QingStor](https://www.qingcloud.com/products/storage#qingstor), which is a remarkable object storage service provided by [QingCloud](https://www.qingcloud.com/).
 
+> Current logstash release(5.5.x) has compatibility issues with this plugin, some unknown errors may cause the uploading failing. Please use the previous releases of logstash, such as version 5.4.3.
+
 For now, We've submitted this plugin to rubygems.org. Use the following command to install.
 
 ``` bash
 $ bin/logstash-plugin install logstash-output-qingstor
+```
+
+If you have installed a previous release, please use the folliwing command to update.
+
+```bash
+$ bin/logstash-plugin update logstash-output-qingstor
 ```
 
 If want to install the local code, please refer to the following guide to install it manually.
