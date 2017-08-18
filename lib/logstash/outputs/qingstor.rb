@@ -193,7 +193,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
 
     @logger.debug('uploading current workspace')
     @file_repository.each_files do |file|
-      upload_file(file)
+      upload_file(file) if file.size > 0
     end
 
     @file_repository.shutdown
