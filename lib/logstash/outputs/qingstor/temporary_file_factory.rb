@@ -100,8 +100,12 @@ module LogStash
           end
 
           def size
-            @gzip_writer.flush
-            @gzip_writer.to_io.size
+            if @gzip_writer.pos == 0
+              0
+            else
+              @gzip_writer.flush
+              @gzip_writer.to_io.size
+            end
           end
 
           def fsync
