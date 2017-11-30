@@ -67,9 +67,8 @@ module LogStash
         end
 
         def new_file
-          uuid = SecureRandom.uuid
           name = generate_name
-          path = ::File.join(@tmpdir, uuid)
+          path = @tmpdir # ::File.join(@tmpdir, uuid)
           key = ::File.join(@prefix, name)
 
           FileUtils.mkdir_p(::File.join(path, @prefix))

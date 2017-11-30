@@ -45,7 +45,7 @@ module LogStash
           rescue
             IOError
           end
-          FileUtils.rm_r(@tmp_path, :secure => true)
+          FileUtils.rm(::File.join(@tmp_path, @key), :force => true)
         end
 
         def empty?
@@ -55,9 +55,9 @@ module LogStash
         def self.create_from_existing_file(file_path, tmp_folder)
           key_parts = Pathname.new(file_path).relative_path_from(tmp_folder)
                               .to_s.split(::File::SEPARATOR)
-          TemporaryFile.new(key_parts.slice(1, key_parts.size).join('/'),
+          TemporaryFile.new(key_parts.join('/'),
                             ::File.open(file_path, 'r'),
-                            ::File.join(tmp_folder, key_parts.slice(0, 1)))
+                            tmp_folder.to_s)
         end
       end
     end
