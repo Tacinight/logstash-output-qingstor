@@ -47,12 +47,6 @@ describe LogStash::Outputs::Qingstor::TemporaryFileFactory do
       expect(file.path).to match(/#{file.key}/)
     end
 
-    it 'create a unique directory in the temporary directory for each file' do
-      uuid = 'hola'
-      expect(SecureRandom).to receive(:uuid).and_return(uuid).twice
-      expect(subject.current.path).to include(uuid)
-    end
-
     context 'with tags supplied' do
       let(:tags) { %w[secret service] }
 

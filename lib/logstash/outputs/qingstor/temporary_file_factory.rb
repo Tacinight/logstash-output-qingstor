@@ -57,7 +57,7 @@ module LogStash
         end
 
         def generate_name
-          filename = "ls.qingstor.#{SecureRandom.uuid}.#{current_time}"
+          filename = "ls.qingstor.#{current_time}.#{SecureRandom.uuid}"
 
           if !tags.empty?
             "#{filename}.tag_#{tags.join('.')}.part#{counter}.#{extension}"
