@@ -1,3 +1,6 @@
+## 0.2.7
+  - Fix: filter empty file and large file while restoring
+
 ## 0.2.6
   - Fix: swap uuid and date of the file name for sorting
   

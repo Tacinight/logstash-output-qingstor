@@ -44,12 +44,11 @@ describe LogStash::Outputs::Qingstor do
   end
 
   it 'upload existing file if turn on restore function' do
-    unless File.exist?(File.join(tmpdir, 'uuid_dir'))
-      FileUtils.mkdir_p(File.join(tmpdir, 'uuid_dir'))
-    end
-    f = File.open(File.join(tmpdir, 'uuid_dir/temp'), 'w')
-    f.write(event_encoded * 10)
-    f.close
+    non_empty_file = File.open(File.join(tmpdir, 'non-empty-file'), 'w')
+    non_empty_file.write(event_encoded * 10)
+    non_empty_file.close
+    empty_file = File.open(File.join(tmpdir, 'empty-file'), 'w')
+    empty_file.close
     fetch_event(options.merge('restore' => true, 'tmpdir' => tmpdir),
                 events_and_encoded)
     expect(list_remote_file.size).to eq(2)

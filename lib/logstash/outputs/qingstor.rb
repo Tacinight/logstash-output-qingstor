@@ -256,13 +256,21 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
        .each do |file|
       temp_file = TemporaryFile.create_from_existing_file(file,
                                                           temp_folder_path)
-      @logger.debug('Recoving from crash and uploading',
+
+      # Restoring too large file would cause java heap out of memory
+      if temp_file.size > 0 && temp_file.size < 100 * 1024 * 1024
+        @logger.debug('Recoving from crash and uploading',
                     :file => temp_file.path)
-      @crash_uploader.upload_async(
-        temp_file,
-        :on_complete => method(:clean_temporary_file),
-        :upload_options => upload_options
-      )
+        @crash_uploader.upload_async(
+          temp_file,
+          :on_complete => method(:clean_temporary_file),
+          :upload_options => upload_options
+        )
+      elsif temp_file.size == 0
+        @logger.debug('Recoving from crash, delete empty files',
+                    :file => temp_file.path)
+        temp_file.delete!
+      end
     end
   end
 end # class LogStash::Outputs::Qingstor
