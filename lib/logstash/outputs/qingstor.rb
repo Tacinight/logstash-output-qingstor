@@ -259,8 +259,10 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
 
       # Restoring too large file would cause java heap out of memory
       if temp_file.size > 0 && temp_file.size < 100 * 1024 * 1024
+        temp_file.key = 'Restored/' + Time.new.strftime('%Y-%m-%d/')
+                        + temp_file.key
         @logger.debug('Recoving from crash and uploading',
-                    :file => temp_file.path)
+                    :file => temp_file.key)
         @crash_uploader.upload_async(
           temp_file,
           :on_complete => method(:clean_temporary_file),

@@ -1,3 +1,6 @@
+## 0.2.8
+  - Fix: add prefixes for restored file
+
 ## 0.2.7
   - Fix: filter empty file and large file while restoring
 

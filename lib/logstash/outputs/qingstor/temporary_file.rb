@@ -39,6 +39,10 @@ module LogStash
           @key.gsub(/^\//, '')
         end
 
+        def key=(key)
+          @key = key
+        end
+
         def delete!
           begin
             @fd.close
