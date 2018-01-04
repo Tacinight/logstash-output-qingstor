@@ -6,71 +6,86 @@ module LogStash
   module Outputs
     class Qingstor
       class RotationPolicy
-        def initialize(policy, file_size, file_time)
-          @policy = policy
+        class Policy
+          def to_s
+            name
+          end
+
+          def name
+            self.class.name.split('::').last.downcase
+          end
+
+          def needs_periodic?
+            true
+          end
+
+          def positive_check(*arg)
+            arg.each do |x|
+              raise(LogStash::ConfigurationError,
+                    "#{name} policy needs positive arguments") if x <= 0
+            end
+          end
+        end
+
+        class Time < Policy
+          def initialize(file_size, file_time)
+            @file_time = file_time
+            positive_check(@file_time)
+          end
+
+          def rotate?(file)
+            !file.empty? && (::Time.now - file.ctime) >= @file_time
+          end
+        end 
+
+        class Size < Policy
+          def initialize(file_size, file_time)
+            @file_size = file_size
+            positive_check(@file_size)
+          end
+
+          def rotate?(file)
+            file.size >= @file_size
+          end
+
+          def needs_periodic?; false; end
+        end
+
+        class SizeAndTime < Policy
+          def initialize(file_size, file_time)
+            @file_size, @file_time = file_size, file_time
+            positive_check(file_size, file_time)
+          end
+
+          def rotate?(file)
+            (!file.empty? && (::Time.now - file.ctime) >= @file_time) ||
+            (file.size >= @file_size)
+          end
+        end
+
+        def Policy(policy, file_size, file_time)
           case policy
-          when 'time'
-            init_time(file_time)
-          when 'size'
-            init_size(file_size)
-          when 'size_and_time'
-            init_size(file_size)
-            init_time(file_time)
+          when Policy then policy
+          else 
+            self.class.const_get(policy.to_s.split('_').map(&:capitalize).join)
+              .new(file_size, file_time)
           end
         end
 
-        def init_size(file_size)
-          if file_size <= 0
-            raise LogStash::ConfigurationError, "'file_size' need to "\
-              + 'be greater than 0'
-          end
-          @file_size = file_size
-        end
-
-        def init_time(file_time)
-          if file_time <= 0
-            raise LogStash::ConfigurationError, "'file_time' need to "\
-              + 'be greater than 0'
-          end
-          @file_time = file_time * 60
+        def initialize(policy, file_size, file_time)
+          @policy = Policy(policy, file_size, file_time)
         end
 
         def rotate?(file)
-          case @policy
-          when 'time'
-            time_rotate?(file)
-          when 'size'
-            size_rotate?(file)
-          when 'size_and_time'
-            size_and_time_rotate?(file)
-          end
-        end
-
-        def size_and_time_rotate?(file)
-          size_rotate?(file) || time_rotate?(file)
-        end
-
-        def size_rotate?(file)
-          file.size >= @file_size
-        end
-
-        def time_rotate?(file)
-          !file.empty? && (Time.now - file.ctime) >= @file_time
+          @policy.rotate?(file)
         end
 
         def needs_periodic?
-          case @policy
-          when 'time' then
-            true
-          when 'size_and_time' then
-            true
-          else
-            false
-          end
+          @policy.needs_periodic?
         end
 
         def to_s
-          "#{@policy} #{@file_time} #{@file_size}"
+          @policy.to_s
         end
       end
     end
