@@ -6,3 +6,6 @@ Layout/CaseIndentation:
 
 Style/ClassAndModuleChildren:
   Enabled: false
+
+Metric/BlockLength:
+  Enabled: false
