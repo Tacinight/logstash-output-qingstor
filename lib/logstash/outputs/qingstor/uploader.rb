@@ -10,6 +10,8 @@ module LogStash
   module Outputs
     class Qingstor
       class Uploader
+        require 'logstash/outputs/qingstor/multipart_uploader'
+
         TIME_BEFORE_RETRYING_SECONDS = 1
         DEFAULT_THREADPOOL = Concurrent::ThreadPoolExecutor.new(
           :min_thread => 1,
@@ -34,29 +36,38 @@ module LogStash
 
         def upload(file, options = {})
           upload_options = options.fetch(:upload_options, {})
+          upload_headers = process_encrypt_options(upload_options)
 
-          file_md5 = Digest::MD5.file(file.path).to_s
+          if file.size > 50 * 1024 * 1024
+            @logger.debug('multipart uploading file', :file => file.key)
+            multipart_uploader = MultipartUploader.new(@bucket, @logger, file, upload_headers)
+            multipart_uploader.upload
+          else
+            upload_headers['content_md5'] = Digest::MD5.file(file.path).to_s
+            upload_headers['body'] = ::File.read(file.path)
+            @logger.debug('uploading file', :file => file.key)
+            @bucket.put_object(file.key, upload_headers)
+          end
 
-          upload_headers = {
-            'content_md5' => file_md5,
-            'body' => ::File.read(file.path)
-          }
+          options[:on_complete].call(file) unless options[:on_complete].nil?
+        end
+
+        def process_encrypt_options(upload_options)
+          res = {}
 
           unless upload_options[:server_side_encryption_algorithm].nil?
             base64_key = Base64.strict_encode64(upload_options[:customer_key])
             key_md5 = Digest::MD5.hexdigest(upload_options[:customer_key])
             base64_key_md5 = Base64.strict_encode64(key_md5)
-            upload_headers.merge!(
+            res.merge!(
               'x_qs_encryption_customer_algorithm' =>
                 upload_options[:server_side_encryption_algorithm],
               'x_qs_encryption_customer_key' => base64_key,
               'x_qs_encryption_customer_key_md5' => base64_key_md5
             )
           end
-          @logger.debug('uploading file', :file => file.key)
-          bucket.put_object(file.key, upload_headers)
 
-          options[:on_complete].call(file) unless options[:on_complete].nil?
+          res
         end
 
         def stop

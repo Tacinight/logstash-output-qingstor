@@ -49,7 +49,7 @@ module LogStash
           rescue
             IOError
           end
-          FileUtils.rm(::File.join(@tmp_path, @key), :force => true)
+          FileUtils.rm(path, :force => true)
         end
 
         def empty?

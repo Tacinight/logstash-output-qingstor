@@ -28,6 +28,10 @@ describe LogStash::Outputs::Qingstor do
     clean_remote_files
   end
 
+  before do
+    FileUtils.mkdir_p(tmpdir) unless File.exist?(tmpdir)
+  end
+
   it 'done work with minimal options' do
     fetch_event(options, events_and_encoded)
     expect(list_remote_file.size).to eq(1)

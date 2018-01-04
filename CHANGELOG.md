@@ -1,3 +1,6 @@
+## 0.3.0
+  - Add MultipartUploader supporting large file size up to 500GB
+
 ## 0.2.8
   - Fix: add prefixes for restored file
 

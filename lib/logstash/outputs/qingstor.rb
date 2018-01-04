@@ -256,11 +256,9 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
        .each do |file|
       temp_file = TemporaryFile.create_from_existing_file(file,
                                                           temp_folder_path)
-
-      # Restoring too large file would cause java heap out of memory
-      if temp_file.size > 0 && temp_file.size < 100 * 1024 * 1024
-        temp_file.key = 'Restored/' + Time.new.strftime('%Y-%m-%d/')
-                        + temp_file.key
+      # Now multipart uploader supports file size up to 500GB
+      if temp_file.size > 0
+        temp_file.key = 'Restored/' + Time.new.strftime('%Y-%m-%d/') + temp_file.key
         @logger.debug('Recoving from crash and uploading',
                     :file => temp_file.key)
         @crash_uploader.upload_async(
