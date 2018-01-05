@@ -1,29 +1,25 @@
 # Logstash Output Plugin for QingStor 
+[![Build Status](https://travis-ci.org/yunify/logstash-output-qingstor.svg?branch=master)](https://travis-ci.org/yunify/logstash-output-qingstor)  [![Gem Version](https://badge.fury.io/rb/logstash-output-qingstor.svg)](https://badge.fury.io/rb/logstash-output-qingstor.svg) [![License](http://img.shields.io/badge/license-apache%20v2-blue.svg)](https://github.com/yunify/logstash-output-qingstor/blob/master/LICENSE) [![README Chinese](https://img.shields.io/badge/README-%E4%B8%AD%E6%96%87-blue.svg)](/README_zh_CN.md)
 
-English | [中文](/README_zh_CN.md)
+This is a Logstash output plugin, it collects the outputs from logstash, and store them in [QingStor](https://www.qingcloud.com/products/storage#qingstor).
 
-As an output plugin, it can collect the outputs from logstash, and store them in [QingStor](https://www.qingcloud.com/products/storage#qingstor), which is a remarkable object storage service provided by [QingCloud](https://www.qingcloud.com/).
+> Incompatible with Logstash version 5.5.x. Please use the least or previous releases to avoid crashing down errors, such as 6.0.0+ or 5.4.x.
 
-> Current logstash release(5.5.x) has compatibility issues with this plugin, some unknown errors may cause the uploading failing. Please use the previous releases of logstash, such as version 5.4.3.
-
-For now, We've submitted this plugin to rubygems.org. Use the following command to install.
+## How to use
+This plugin has submitted to [rubygems.org](rubygems.org). Use the following command to install:
 
 ``` bash
 $ bin/logstash-plugin install logstash-output-qingstor
 ```
 
-If you have installed a previous release, please use the folliwing command to update.
+If you have installed a previous release, please use the folliwing command to update:
 
 ```bash
 $ bin/logstash-plugin update logstash-output-qingstor
 ```
 
-If want to install the local code, please refer to the following guide to install it manually.
-
-## 1. Configuration Guide
-
-#### 1.1 Run in minimal Configuration Items
-
+#### Run in minimal Configuration Items
+Edit a conf file, fill `output` field with qingstor configurations.
 ```sh
 output {
     qingstor {
@@ -36,53 +32,18 @@ output {
 
 ```
 
-More configuration details please refer to [common options](/docs/index.asciidoc).
+> More configuration details please refer to [common options](/docs/index.asciidoc).
 
-## 2. Running your unpublished Plugin in Logstash
+## Features ([CHANGELOG](./CHANGELOG.md))
+- Support gzip compress.
+- Restore uncomplete files.
+- Server size encrption.
+- Redirect QingStor hosts.
+- Multipart uploading supports 500GB file.
 
-#### 2.1 Run in a local Logstash clone
-
-- Edit Logstash `Gemfile` and add the local plugin path, for example:
-- 
-``` ruby
-$ gem "logstash-output-qingstor", :path => "/your/local/logstash-output-qingstor"
-```
-
-- Install plugin
-- 
-``` bash
-$ bin/logstash-plugin install --no-verify
-```
-- Run Logstash with your plugin
-
-```bash
-$ bin/logstash -e "output { \
-      qingstor { \
-          access_key_id => 'your_access_key_id' \
-          secret_access_key => 'your_secret_access_key' \
-          bucket => 'bucket_name' \
-      } \
-  }"
-```
-
-At this point any modifications to the plugin code will be applied to this local Logstash setup. After modifying the plugin, simply rerun Logstash.
-
-#### 2.2 Run in an installed Logstash
-
-You can use the same **2.1** method to run your plugin in an installed Logstash by editing its `Gemfile` and pointing the `:path` to your local plugin development directory or you can build the gem and install it using:
-
-- Build your plugin gem
-
-``` bash
-$ gem build logstash-output-qingstor.gemspec
-```
-- Install the plugin from the Logstash home
-
-``` bash
-$ bin/logstash-plugin install /your/local/plugin/logstash-output-qingstor.gem
-```
-
-- Start Logstash and proceed to test the plugin
+## TODO
+- Custom stored file name.
+- Restore uncomplete multipart uploading
 
 ## Contributing
 Please see [Contributing Guidelines](./CONTRIBUTING.md) of this project before submitting patches.

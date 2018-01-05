@@ -1,23 +1,29 @@
 # Logstash Output Plugin for QingStor
 
-[English](/README.md) | 中文
+[![Build Status](https://travis-ci.org/yunify/logstash-output-qingstor.svg?branch=master)](https://travis-ci.org/yunify/logstash-output-qingstor)  [![Gem Version](https://badge.fury.io/rb/logstash-output-qingstor.svg)](https://badge.fury.io/rb/logstash-output-qingstor.svg) [![License](http://img.shields.io/badge/license-apache%20v2-blue.svg)](https://github.com/yunify/logstash-output-qingstor/blob/master/LICENSE) [![README English](https://img.shields.io/badge/README-English-blue.svg)](/README.md)
 
-作为一个 Logstash 的 Output 插件, 它可以将 Logstash 输出的结果打包上传至 QingStor 对象存储中.  
-详细功能参考下面配置说明.  
+这是适配了 [QingStor](https://www.qingcloud.com/products/storage#qingstor) 的 Logstash output 插件。通过本插件可以将 Logstash 的结果导出到 QingStor 对象存储中。
 
+> 已知在 Logstash 5.5.x 版本中会崩溃，请使用最新或者之前的 Logstash 版本。例如 6.0 以上版本或者 5.4 版本。
+
+## 安装
 目前插件已经提交至 [RubyGems](https://rubygems.org), 使用以下命令安装:
 
 ``` bash
 $ bin/logstash-plugin install logstash-output-qingstor
 ```
 
- 手动安装本地代码, 安装方法参考下文.
+如果你安装过一个早期的版本，可以通过以下的命令来更新插件：
 
-## 1. 配置说明
+``` bash
+$ bin/logstash-plugin update logstash-output-qingstor
+```
 
-#### 1.1 最小运行配置
-- 使用 `-f` 接受一个 `*.conf` 文件或者使用 `-e` 参数直接输入配置, 最小运行配置至少需要以下三项
-- 
+## 配置说明
+
+#### 最小运行配置
+编辑一个 `*.conf` 文件或者使用 `-e` 参数直接输入配置, 最小运行配置至少需要以下三项
+
 ``` bash
 output {
     qingstor {
@@ -29,7 +35,7 @@ output {
 }
 ```
 
-#### 1.2 其他可选参数说明
+#### 其他可选参数说明
 
 ``` bash
 output {
@@ -58,7 +64,7 @@ output {
         # 默认: "size_and_time". 可选枚举值["size_and_time", "size", "time"].
         rotation_strategy => "size_and_time"
 
-        # 配合"size_and_time", "size"的可选配置型, 单位 MB(megabyte)
+        # 配合"size_and_time", "size"的可选配置型, 单位 megabyte(MB)
         # 默认: 5 (MB)
         size_file => 5
 
@@ -70,7 +76,7 @@ output {
         # 默认: "none". 可选枚举值: ["AES256", "none"]
         server_side_encryption_algorithm => "AES256"
 
-        # 选用服务端文件加密时提供的秘钥, 秘钥要求32位/256bit
+        # 选用服务端文件加密时提供的秘钥, 秘钥要求 32 byte(256 bit)
         customer_key => "your_encryption_key"
 
         # 宕机恢复, 启动logstash时, 自动上传目录下的遗留文件
@@ -80,50 +86,19 @@ output {
     }
 }
 ```
+## 特性 ([CHANGELOG](./CHANGELOG.md))
+- 支持 gzip 压缩。
+- 恢复上次宕机后未上传完成的文件。
+- 服务端加密（AES256）。
+- 重定向指自建的 QingStor 服务器。
+- 分段上传支持最大 500GB 的文件。
 
-## 2. 安装插件
+## TODO
+- 自定义上传文件的名称。
+- 恢复意外终止的分段上传。
 
-#### 2.1 直接运行本地的插件
+## Contributing
+Please see [Contributing Guidelines](./CONTRIBUTING.md) of this project before submitting patches.
 
-- 编辑 Logstash 目录下的 Gemfile, 添加插件的路径, 例如
-
-``` ruby
-$ gem "logstash-output-qingstor", :path => "/your/local/logstash-output-qingstor"
-```
-
-- 安装插件
-
-``` bash
-$ bin/logstash-plugin install --no-verify
-```
-
-- 使用插件运行
-- 
-``` bash
-$ bin/logstash -e "output { \
-      qingstor { \
-          access_key_id => 'your_access_key_id' \
-          secret_access_key => 'your_secret_access_key' \
-          bucket => 'bucket_name' \
-      } \
-  }"
-```
-
-此时你对插件所做的任意的代码上的修改都会直接生效.
-
-#### 2.2 安装一个本地插件然后运行
-
-这一步你需要生成一个插件的 Gem 包, 然后通过 Logstash 来安装到 Logstash 的插件目录下
-- 在项目目录下生成 Gem
-
-``` bash
-$ gem build logstash-output-qingstor.gemspec
-```
-
-- 在 Logstash 的目录下使用 `logstash-plugin` 安装
-
-``` bash
-$ bin/logstash-plugin install /your/local/plugin/logstash-output-qingstor.gem
-```
-
-- 安装完毕之后, 就可以使用 Logstash 运行开始测试了.
+## LICENSE
+The Apache License (Version 2.0, January 2004).
