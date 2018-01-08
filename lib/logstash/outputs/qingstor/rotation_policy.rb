@@ -73,7 +73,15 @@ module LogStash
         end
 
         def initialize(policy, file_size, file_time)
-          @policy = Policy(policy, file_size, file_time)
+          @policy = Policy(policy, to_bytes(file_size), to_seconds(file_time))
+        end
+
+        def to_seconds(file_time)
+          file_time * 60
+        end
+
+        def to_bytes(file_size)
+          file_size * 1024 * 1024
         end
 
         def rotate?(file)

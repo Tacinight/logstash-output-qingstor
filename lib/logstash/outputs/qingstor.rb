@@ -76,8 +76,8 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   config :rotation_strategy, :validate => %w[size_and_time size time],
                              :default => 'size_and_time'
 
-  # Define the size requirement for each file to upload to QingStor. In byte.
-  config :file_size, :validate => :number, :default => 1024 * 1024 * 5
+  # Define the size requirement for each file to upload to QingStor. In megabyte(MB).
+  config :file_size, :validate => :number, :default => 5
 
   # Define the time interval for each file to upload to QingStor. In minutes.
   config :file_time, :validate => :number, :default => 15

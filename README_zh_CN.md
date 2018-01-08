@@ -58,11 +58,11 @@ output {
         # 默认: "size_and_time". 可选枚举值["size_and_time", "size", "time"].
         rotation_strategy => "size_and_time"
 
-        # 配合"size_and_time", "size"的可选配置型, 单位byte
-        # 默认: 1024*1024*5 (byte) = 5 (MB)
-        size_file => 1024*1024*5
+        # 配合"size_and_time", "size"的可选配置型, 单位 MB(megabyte)
+        # 默认: 5 (MB)
+        size_file => 5
 
-        # 配合"size_and_time", "time"的可选配置型, 单位minute
+        # 配合"size_and_time", "time"的可选配置型, 单位 minute
         # 默认: 15 (minutes)
         time_file => 15 
 
