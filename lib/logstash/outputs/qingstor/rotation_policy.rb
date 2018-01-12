@@ -28,7 +28,7 @@ module LogStash
         end
 
         class Time < Policy
-          def initialize(file_size, file_time)
+          def initialize(_, file_time)
             @file_time = file_time
             positive_check(@file_time)
           end
@@ -36,10 +36,10 @@ module LogStash
           def rotate?(file)
             !file.empty? && (::Time.now - file.ctime) >= @file_time
           end
-        end 
+        end
 
         class Size < Policy
-          def initialize(file_size, file_time)
+          def initialize(file_size, _)
             @file_size = file_size
             positive_check(@file_size)
           end
@@ -59,16 +59,16 @@ module LogStash
 
           def rotate?(file)
             (!file.empty? && (::Time.now - file.ctime) >= @file_time) ||
-            (file.size >= @file_size)
+              (file.size >= @file_size)
           end
         end
 
         def Policy(policy, file_size, file_time)
           case policy
           when Policy then policy
-          else 
+          else
             self.class.const_get(policy.to_s.split('_').map(&:capitalize).join)
-              .new(file_size, file_time)
+                .new(file_size, file_time)
           end
         end
 
