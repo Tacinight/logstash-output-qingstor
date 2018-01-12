@@ -9,10 +9,15 @@ require_relative './qs_access_helper'
 require_relative './spec_helper'
 
 describe LogStash::Outputs::Qingstor do
+  def tmp_dir_path
+    File.join(Dir.tmpdir, 'lg_qs_spec')
+  end
+
   let(:prefix) { 'ss/%{server}' }
   let(:event) { LogStash::Event.new('server' => 'overwatch') }
   let(:event_encoded) { 'May the code be with you!' }
   let(:events_and_encoded) { { event => event_encoded } }
+  let(:tmpdir) { tmp_dir_path }
   let(:options) do
     {
       'access_key_id' => ENV['access_key_id'],
@@ -22,14 +27,17 @@ describe LogStash::Outputs::Qingstor do
       'prefix' => prefix
     }
   end
-  let(:tmpdir) { File.join(Dir.tmpdir, 'logstash_restore_dir') }
 
-  after do
+  before(:all) do
+    FileUtils.mkdir_p(tmp_dir_path) unless File.exist?(tmp_dir_path)
+  end
+
+  after(:each) do
     clean_remote_files
   end
 
-  before do
-    FileUtils.mkdir_p(tmpdir) unless File.exist?(tmpdir)
+  after(:all) do
+    FileUtils.rm_rf(tmp_dir_path)
   end
 
   it 'done work with minimal options' do

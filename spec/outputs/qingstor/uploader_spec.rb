@@ -5,7 +5,7 @@ require 'logstash/outputs/qingstor/uploader'
 require 'logstash/outputs/qingstor/temporary_file'
 require 'qingstor/sdk'
 require 'stud/temporary'
-
+require 'fileutils'
 require_relative '../qs_access_helper'
 
 describe LogStash::Outputs::Qingstor::Uploader do
@@ -31,12 +31,23 @@ describe LogStash::Outputs::Qingstor::Uploader do
     f
   end
 
-  after do
+  before(:all) do
+    clean_remote_files
+  end
+
+  after(:each) do
     delete_remote_file key
+    FileUtils.rm_r(tmp_file)
   end
 
   it 'upload file to the qingstor bucket' do
     subject.upload(file)
+    expect(list_remote_file.size).to eq(1)
+  end
+
+  it 'async upload file to qingstor' do
+    subject.upload_async(file)
+    sleep 2
     expect(list_remote_file.size).to eq(1)
   end
 
