@@ -14,20 +14,18 @@ module LogStash
 
         def_delegators :@fd, :path, :write, :close, :fsync
 
-        attr_reader :fd
+        attr_reader :fd, :dir_path
 
-        def initialize(key, fd, tmp_path)
+        def initialize(key, fd, dir_path)
           @key = key
           @fd = fd
-          @tmp_path = tmp_path
+          @dir_path = dir_path
           @created_at = Time.now
         end
 
         def ctime
           @created_at
         end
-
-        attr_reader :tmp_path
 
         def size
           @fd.size
@@ -49,7 +47,7 @@ module LogStash
           rescue
             IOError
           end
-          FileUtils.rm(path, :force => true)
+          FileUtils.rm_f(path)
         end
 
         def empty?

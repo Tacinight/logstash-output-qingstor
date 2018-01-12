@@ -6,16 +6,19 @@ require 'fileutils'
 require 'tmpdir'
 
 describe LogStash::Outputs::Qingstor::TemporaryFile do
+  def file_path
+    File.join(Dir.tmpdir, 'foo.log')
+  end
+
   subject { described_class.new(key, io, Dir.tmpdir) }
 
   let(:key) { 'foo.log' }
   let(:content) { 'May the code be with you!' }
-  let(:tmp_path) { File.join(Dir.tmpdir, key) }
   let(:file_mode) { 'w+' }
-  let(:io) { ::File.open(tmp_path, file_mode) }
+  let(:io) { ::File.open(file_path, file_mode) }
 
   after(:all) do
-    FileUtils.rm('/tmp/foo.log') if File.exist?('/tmp/foo.log')
+    FileUtils.rm(file_path) if File.exist?(file_path)
   end
 
   it 'return the key of the file' do
@@ -31,11 +34,11 @@ describe LogStash::Outputs::Qingstor::TemporaryFile do
   it 'can return the correct file size' do
     subject.write(content)
     subject.close
-    expect(subject.size).to eq(File.size(tmp_path))
+    expect(subject.size).to eq(File.size(file_path))
   end
 
-  it 'return the tmp_path of the file' do
-    expect(File.join(subject.tmp_path, subject.key)).to eq(tmp_path)
+  it 'return the file_path of the file' do
+    expect(File.join(subject.dir_path, subject.key)).to eq(file_path)
   end
 
   it 'return the creation time' do
@@ -43,9 +46,9 @@ describe LogStash::Outputs::Qingstor::TemporaryFile do
   end
 
   it 'can delete file correctly' do
-    expect(File.exist?(tmp_path)).to be_truthy
+    expect(File.exist?(file_path)).to be_truthy
     subject.delete!
-    expect(File.exist?(tmp_path)).to be_falsey
+    expect(File.exist?(file_path)).to be_falsey
   end
 
   it 'return if the file is empty' do
