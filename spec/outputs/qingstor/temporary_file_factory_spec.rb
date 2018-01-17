@@ -7,11 +7,18 @@ require 'fileutils'
 require 'tmpdir'
 
 describe LogStash::Outputs::Qingstor::TemporaryFileFactory do
-  subject { described_class.new(prefix, tags, encoding, tmpdir) }
+  def tmp_dir
+    File.join(Dir.tmpdir, 'logstash-qs')
+  end
+
+  subject { described_class.new(prefix, tags, encoding, tmp_dir) }
 
   let(:prefix) { 'lg2qs' }
   let(:tags) { [] }
-  let(:tmpdir) { File.join(Dir.tmpdir, 'logstash-qs') }
+
+  after(:all) do
+    FileUtils.rm_rf(tmp_dir)
+  end
 
   shared_examples 'file factory' do
     it 'creates the file on disk' do
