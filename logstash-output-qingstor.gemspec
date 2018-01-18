@@ -19,10 +19,10 @@ Gem::Specification.new do |s|
 
   # Gem dependencies
   s.add_runtime_dependency 'logstash-core-plugin-api', '~> 2.0'
-  s.add_runtime_dependency 'logstash-codec-plain', '~> 0'
+  s.add_runtime_dependency 'logstash-codec-plain'
   s.add_runtime_dependency 'qingstor-sdk', '~> 1.9', '>= 1.9.3'
-  s.add_runtime_dependency 'concurrent-ruby', '~> 0'
+  s.add_runtime_dependency 'concurrent-ruby'
 
   s.add_development_dependency 'stud', '~> 0.0.22'
-  s.add_development_dependency 'logstash-devutils', '~> 0'
+  s.add_development_dependency 'logstash-devutils'
 end
