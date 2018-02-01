@@ -39,13 +39,13 @@ module LogStash
           upload_headers = process_encrypt_options(upload_options)
 
           if file.size > 50 * 1024 * 1024
-            @logger.debug('multipart uploading file', :file => file.key)
+            @logger.info('Multipart uploading file', :file => file.key)
             multipart_uploader = MultipartUploader.new(@bucket, @logger, file, upload_headers)
             multipart_uploader.upload
           else
             upload_headers['content_md5'] = Digest::MD5.file(file.path).to_s
             upload_headers['body'] = ::File.read(file.path)
-            @logger.debug('uploading file', :file => file.key)
+            @logger.info('Uploading file', :file => file.key)
             @bucket.put_object(file.key, upload_headers)
           end
 

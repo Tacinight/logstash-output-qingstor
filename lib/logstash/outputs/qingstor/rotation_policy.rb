@@ -7,10 +7,6 @@ module LogStash
     class Qingstor
       class RotationPolicy
         class Policy
-          def to_s
-            name
-          end
-
           def name
             self.class.name.split('::').last.downcase
           end
@@ -36,6 +32,10 @@ module LogStash
           def rotate?(file)
             !file.empty? && (::Time.now - file.ctime) >= @file_time
           end
+
+          def to_s
+            { :policy => name, :file_time => @file_time }.to_s
+          end
         end
 
         class Size < Policy
@@ -49,6 +49,10 @@ module LogStash
           end
 
           def needs_periodic?; false; end
+
+          def to_s
+            { :policy => name, :file_size => @file_size }.to_s
+          end
         end
 
         class SizeAndTime < Policy
@@ -60,6 +64,11 @@ module LogStash
           def rotate?(file)
             (!file.empty? && (::Time.now - file.ctime) >= @file_time) ||
               (file.size >= @file_size)
+          end
+
+          def to_s
+            { :policy => name, :file_time => @file_time,
+              :file_size => @file_size }.to_s
           end
         end
 

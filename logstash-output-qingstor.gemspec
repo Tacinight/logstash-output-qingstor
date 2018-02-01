@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name          = 'logstash-output-qingstor'
-  s.version       = '0.3.3'
+  s.version       = '0.3.4'
   s.licenses      = ['Apache-2.0']
   s.summary       = 'logstash output plugin for qingstor'
   s.description   = 'Collect the outputs of logstash and store into QingStor'

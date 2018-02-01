@@ -64,7 +64,7 @@ module LogStash
             object_parts = (0..last_part_number).to_a.map {|x| {'part_number' => x}}
             @upload_headers['object_parts'] = object_parts
             res = @bucket.complete_multipart_upload(@object.key, @upload_headers)
-            @logger.debug('multipart uploading completed', :file => @object.key)
+            @logger.info('multipart uploading completed', :file => @object.key)
           end 
         
           def calculate_segment

@@ -105,16 +105,13 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
 
   def register
     QingstorValidator.prefix_valid?(@prefix) unless @prefix.nil?
-
     unless directory_valid?(@tmpdir)
       raise LogStash::ConfigurationError,
             "Logstash must have the permissions to write to: #{@tmpdir}"
     end
 
     @file_repository = FileRepository.new(@tags, @encoding, @tmpdir)
-
     @rotation = RotationPolicy.new(@rotation_strategy, @file_size, @file_time)
-
     executor = Concurrent::ThreadPoolExecutor.new(
       :min_threads => 1,
       :max_threads => @upload_workers_count,
@@ -124,13 +121,21 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
 
     @qs_bucket = getbucket
     QingstorValidator.bucket_valid?(@qs_bucket)
-
     @uploader = Uploader.new(@qs_bucket, @logger, executor)
 
+    log_print_config
     start_periodic_check if @rotation.needs_periodic?
-
     restore_from_crash if @restore
   end # def register
+
+  def log_print_config
+    @logger.info('Run at setting: ', :prefix => @prefix,
+                                     :tmpdir => @tmpdir,
+                                     :rotation => @rotation.to_s,
+                                     :tags => @tags,
+                                     :encoding => @encoding,
+                                     :restore => @restore)
+  end
 
   def multi_receive_encoded(events_and_encoded)
     prefix_written_to = Set.new
@@ -191,7 +196,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   def close
     stop_periodic_check if @rotation.needs_periodic?
 
-    @logger.debug('uploading current workspace')
+    @logger.info('uploading current workspace before closing')
     @file_repository.each_files do |file|
       upload_file(file) if file.size > 0
     end
@@ -217,12 +222,12 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   end
 
   def clean_temporary_file(file)
-    @logger.debug('Removing temporary file', :file => file.path)
+    @logger.info('Callback: removing temporary file', :file => file.path)
     file.delete!
   end
 
   def start_periodic_check
-    @logger.debug('Start periodic rotation check')
+    @logger.info('Start periodic rotation check')
 
     @periodic_check = Concurrent::TimerTask.new(
       :execution_interval => PERIODIC_CHECK_INTERVAL_IN_SECONDS
@@ -259,7 +264,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
       # Now multipart uploader supports file size up to 500GB
       if temp_file.size > 0
         temp_file.key = 'Restored/' + Time.new.strftime('%Y-%m-%d/') + temp_file.key
-        @logger.debug('Recoving from crash and uploading',
+        @logger.info('Recoving from crash and uploading',
                     :file => temp_file.key)
         @crash_uploader.upload_async(
           temp_file,
@@ -267,7 +272,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
           :upload_options => upload_options
         )
       elsif temp_file.size == 0
-        @logger.debug('Recoving from crash, delete empty files',
+        @logger.info('Recoving from crash, delete empty files',
                     :file => temp_file.path)
         temp_file.delete!
       end

@@ -1,3 +1,6 @@
+## 0.3.4
+  - Change some events log level to 'info'
+
 ## 0.3.2
   - Fix the errors of unit conversion in rotation policy
 
