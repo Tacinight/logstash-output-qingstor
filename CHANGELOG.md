@@ -1,3 +1,6 @@
+## 0.3.5
+  - spec: chang redirection error type
+
 ## 0.3.4
   - Change some events log level to 'info'
 

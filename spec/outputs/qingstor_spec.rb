@@ -69,12 +69,12 @@ describe LogStash::Outputs::Qingstor do
   it 'redirect to the specified host without specified port' do
     new_options = options.merge('host' => 'qingstor.dev', 'port' => 444)
     expect { fetch_event(new_options, events_and_encoded) }
-      .to raise_error(Net::HTTP::Persistent::Error)
+      .to raise_error(QingStor::SDK::NetworkError)
   end
 
   it 'redirect to the specified host without specified port' do
     new_options = options.merge('host' => 'qingstor.dev', 'port' => 444)
     expect { fetch_event(new_options, events_and_encoded) }
-      .to raise_error(Net::HTTP::Persistent::Error)
+      .to raise_error(QingStor::SDK::NetworkError)
   end
 end
