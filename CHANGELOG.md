@@ -1,3 +1,6 @@
+## 0.3.6
+  - Fix: remove the region restriction
+
 ## 0.3.5
   - spec: chang redirection error type
 

@@ -53,7 +53,7 @@ class LogStash::Outputs::Qingstor < LogStash::Outputs::Base
   config :bucket, :validate => :string, :required => true
 
   # The region of the QingStor bucket
-  config :region, :validate => %w[pek3a sh1a], :default => 'pek3a'
+  config :region, :validate => :string, :default => 'pek3a'
 
   # The prefix of filenames which will work as directory in qingstor
   config :prefix, :validate => :string, :default => ''
